@@ -30,3 +30,6 @@ Payment platform to integrate multiple gateways
     - Setup stripe-cli - https://docs.stripe.com/stripe-cli
     - Modify webhook key in settings - STRIPE_WEBHOOK_KEY
     - stripe listen --forward-to localhost:8000/payment_gateway/webhooks/stripe/
+   
+- Analytics
+  - Mixpanel Link - https://mixpanel.com/s/306EAD
