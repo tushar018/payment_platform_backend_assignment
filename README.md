@@ -5,6 +5,8 @@ Payment platform to integrate multiple gateways
 
 **Setup**
 
+- Clone the repository
+
 - Activate venv
 
   - python3 -m venv payment_env
