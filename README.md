@@ -6,6 +6,8 @@ Payment platform to integrate multiple gateways
 **Setup**
 
 - Clone the repository
+- cd /path/to/project
+  - cd payment_platform_backend_assignment
 
 - Activate venv
 
