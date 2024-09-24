@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Success</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #ffffff;
+            padding: 40px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        p {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Payment Successful!</h1>
+        <p>Thank you for your purchase</p>
+        <p>We appreciate your business!</p>
+        <!-- Hidden input field to store CSRF token -->
+        <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+        <!-- Button to go to homepage -->
+        <button id="homepage-button" class="button">Go to Homepage</button>
+        <br><br>
+    </div>
+    <script>
+        // Get the homepage button and CSRF token
+        var homepageButton = document.getElementById("homepage-button");
+        var csrfToken = document.getElementById("csrf_token").value; // Use the hidden input field
+
+        // Add a click event listener to the button
+        homepageButton.addEventListener("click", function () {
+            // Send a POST request to the local API with CSRF token
+            fetch("{% url 'product_page_view' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken  // Include CSRF token in headers
+                },
+                body: JSON.stringify({ message: 'User clicked on homepage button' })
+            })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Failed to reach the API.');
+                }
+                // Check if response is JSON, parse it
+                return response.json();
+            })
+            .then(function (data) {
+                // Redirect to the desired URL
+                window.location.href = "{% url 'product_page_view' %}";
+            })
+            .catch(function (error) {
+                console.error('Error:', error);
+                alert('An error occurred while connecting to the API.');
+            });
+        });
+    </script>
+</body>
+</html>

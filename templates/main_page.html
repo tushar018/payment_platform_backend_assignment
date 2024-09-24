@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Cool New Products</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?version=3.52.1&features=fetch"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .product {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            padding: 20px;
+            width: 250px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .product:hover {
+            transform: scale(1.05);
+        }
+        .description h3 {
+            font-size: 1.5em;
+            color: #333;
+            margin: 10px 0;
+        }
+        .description h5 {
+            font-size: 1.2em;
+            color: #4CAF50;
+            margin: 10px 0;
+        }
+        .checkout-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .checkout-button:hover {
+            background-color: #45a049;
+        }
+        .manual-payment-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 30px;
+            display: block;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s;
+        }
+        .manual-payment-button:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <section>
+        <!-- Loop through your products here -->
+        {% for product in products %}
+        <div class="product">
+            <div class="description">
+                <h3>{{ product.name }}</h3>
+                <h5>${{ product.get_price }}</h5>
+            </div>
+            <!-- Each button has a unique data-product-id attribute -->
+            <button type="button" class="checkout-button"
+                data-product-id="{{ product.id }}"
+                data-product-name="{{ product.name }}"
+                data-product-currency="{{ product.currency }}"
+                data-product-expiry="{{ product.expiry_time }}"
+                data-product-price="{{ product.price }}"
+                data-product-description="{{ product.description }}">
+                Buy Now
+            </button>
+        </div>
+        {% endfor %}
+    </section>
+    {% csrf_token %}
+
+    <!-- Separate Manual Payment Button -->
+    <button type="button" class="manual-payment-button">
+        Manual Payment
+    </button>
+
+    <script type="text/javascript">
+        // Get CSRF token from the hidden input or meta tag
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Initialize Stripe object with your public key
+        const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+
+        // Get all the checkout buttons
+        const checkoutButtons = document.querySelectorAll(".checkout-button");
+
+        // Add event listeners to each checkout button for Stripe payment
+        checkoutButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                // Get the product details from the button's data attributes
+                const productId = this.getAttribute("data-product-id");
+                const productName = this.getAttribute("data-product-name");
+                const productPrice = this.getAttribute("data-product-price");
+                const productExpiry = this.getAttribute("data-product-expiry");
+                const productCurrency = this.getAttribute("data-product-currency");
+                const productDescription = this.getAttribute("data-product-description");
+
+                // Dynamically construct the URL using the product ID
+                const url = "{% url 'create_payment_session' %}";
+
+                // Send a POST request to create a Stripe session for the selected product
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: productPrice,
+                        currency: productCurrency,
+                        description: productDescription,
+                        expiration_hours: productExpiry,
+                        name: productName,
+                        gateway_platform: "stripe"
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    // Parse the JSON from the response
+                    return response.json();
+                })
+                .then(session => {
+                    console.log("Session ID: ", session.id);
+                    // Redirect to Stripe Checkout
+                    return stripe.redirectToCheckout({ sessionId: session.id });
+                })
+                .then(result => {
+                    // Handle any errors that occur during the redirection
+                    if (result.error) {
+                        alert(result.error.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error occurred during the checkout process:", error);
+                });
+            });
+        });
+
+        // Event listener for the manual payment button
+        const manualPaymentButton = document.querySelector(".manual-payment-button");
+        manualPaymentButton.addEventListener("click", function () {
+            // Construct the manual payment URL dynamically
+            const manualPaymentUrl = "{% url 'manual_payment_view' %}";
+
+            // Redirect to the manual payment view
+            window.location.href = manualPaymentUrl;
+        });
+    </script>
+</body>
+</html>
+
+
