@@ -23,7 +23,7 @@ Payment platform to integrate multiple gateways
   - Terminal 1
 
     - python manage.py runserver
-
+    - Go to your localhost URL
 
   - Terminal 2 (Stripe CLI, OPTIONAL FOR WEBHOOK)
 
